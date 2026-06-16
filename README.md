@@ -9,6 +9,8 @@ A web-based tool for comparing ship cannon damage output in **World of Sea Battl
 ## Features
 
 - **Cannon Comparison**: Compare cannons across Light, Medium, and Heavy categories
+- **Cannon Metadata**: Each cannon shows its wiki category (Cannon / Long Cannon / Carronade) and tier, with range/angle/accuracy on hover
+- **Consumables Loadout**: Equip combat consumables (powders, flares, rations) to fold their bonuses into the DPS math; effects stack and update the table and PvP graph live
 - **Ship-Based DPS**: Calculate total ship DPS by multiplying cannon DPS by ship cannon count
 - **Boarding Damage**: View total boarding damage per cannon configuration (multiplied by ship's cannon count)
 - **Boarding Damage Rate**: See boarding damage output over 60 seconds (Boarding DMG / 60s) to compare sustained boarding damage potential
@@ -63,6 +65,27 @@ damage_per_shot = max(0, penetration − armor)
 shots_in_60s = 60 ÷ reload_time_seconds
 damage_in_60s = damage_per_shot × shots_in_60s
 ```
+
+### Consumables
+
+Equipping consumables applies modifiers on top of the base cannon stats before damage is computed:
+
+```
+effective_pen    = penetration × pen_mult + pen_add
+damage_per_shot = max(0, effective_pen − armor) × dmg_mult
+effective_reload = reload × reload_mult
+```
+
+Modifiers stack when multiple consumables are equipped. The table's PEN / Reload columns and the PvP graph all reflect the effective values. Data is sourced from the World of Sea Battle Wiki:
+
+| Consumable | Effect |
+|------------|--------|
+| Black Double Powder | +2.5 penetration, reload +9% |
+| Phosphorous | +2 penetration |
+| Powder Charge | penetration halved (adds explosion area damage, not modeled) |
+| Rum Ration | load guns 20% faster |
+| Red / Yellow Signal Flare | +7% weapon damage |
+| Red Double Powder | +25% gun damage vs structures |
 
 When a ship is selected, the total ship DPS is calculated as:
 
