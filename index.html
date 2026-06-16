@@ -25,6 +25,17 @@
     .btn.active{background:linear-gradient(180deg,#1b7cff,#0f5ed1);border-color:#67a4ff;box-shadow:0 0 0 2px rgba(26,140,255,.25),0 6px 18px rgba(14,97,255,.25);color:#f4f9ff}
     .btn.active::after{content:"";position:absolute;inset:auto 8px -6px 8px;height:4px;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent-2));opacity:.9}
 
+    /* Consumable toggle buttons (multi-select loadout) */
+    .consumable-btn.active{background:linear-gradient(180deg,#1d7a52,#15613f);border-color:#3eb98d;box-shadow:0 0 0 2px rgba(62,185,141,.25),0 6px 18px rgba(20,97,63,.25);color:#eafff5}
+    .consumable-btn.active::after{content:"";position:absolute;inset:auto 8px -6px 8px;height:4px;border-radius:4px;background:linear-gradient(90deg,#4ee3a3,#2fb6ff);opacity:.9}
+
+    /* Cannon category / tier badges */
+    .cat-badge{display:inline-block;padding:1px 7px;margin-left:8px;border-radius:999px;font-size:11px;font-weight:600;vertical-align:middle}
+    .cat-cannon{background:#16304f;border:1px solid #2e6db0;color:#bcd9ff}
+    .cat-long{background:#1a3a26;border:1px solid #3a8c54;color:#bdf2cf}
+    .cat-carronade{background:#3a2418;border:1px solid #a85f33;color:#ffd6bd}
+    .tier-tag{display:inline-block;margin-left:6px;font-size:10px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);vertical-align:middle}
+
     .table-wrap{margin-top:16px;overflow-x:auto;border-radius:14px;border:1px solid var(--border)}
     table{width:100%;border-collapse:collapse;min-width:880px}
     thead th{position:sticky;top:0;background:#17223b;color:#cfe0ff;text-align:left;font-size:12px;letter-spacing:.4px;text-transform:uppercase;padding:12px;border-bottom:1px solid var(--border)}
@@ -106,7 +117,7 @@
 <body>
   <div class="wrap">
     <h1>World of Sea Battle (Early Access) - DPS Comparator v1.3.2</h1>
-    <div class="subtitle">Compare cannon damage over a 60‑second window. Formula: <span class="badge">damage = max(0, penetration − armor)</span>, shots/60s = <span class="badge">60 ÷ reload</span>.</div>
+    <div class="subtitle">Compare cannon damage over a 60‑second window. Formula: <span class="badge">damage = max(0, penetration − armor)</span>, shots/60s = <span class="badge">60 ÷ reload</span>. Equip <span class="badge">Consumables</span> to fold powder/flare modifiers into the DPS.</div>
 
     <div class="panel">
       <div class="row">
@@ -123,6 +134,13 @@
           <div class="group-title">Target Armor</div>
         </div>
       </div>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="group" id="consumableGroup" role="group" aria-label="Consumables loadout">
+          <div class="group-title">Consumables (Loadout)</div>
+        </div>
+      </div>
+      <div class="note" id="consumableNote">No consumables equipped — base cannon stats.</div>
 
       <div class="table-wrap">
         <table id="resultTable" aria-live="polite">
@@ -156,7 +174,7 @@
       <div id="pvpDamageGraph" style="width: 100%; height: 450px; background: var(--chip); border-radius: 12px; border: 1px solid var(--border); padding: 16px; margin-top: 16px;">
         <svg id="pvpGraphSvg" style="width: 100%; height: 100%;"></svg>
       </div>
-      <div class="note" style="margin-top: 10px;">Shows cumulative damage accumulation from 0-60 seconds. Steeper curves indicate faster front-load damage, better for quick PvP engagements.</div>
+      <div class="note" style="margin-top: 10px;">Shows cumulative damage accumulation from 0-60 seconds. Steeper curves indicate faster front-load damage, better for quick PvP engagements. The Consumables loadout selected above also applies here.</div>
     </div>
 
     <details class="explain" aria-labelledby="math-title">
@@ -192,7 +210,22 @@
           </li>
         </ul>
 
-        <h3>5) Modes and what they show</h3>
+        <h3>5) Consumables (loadout)</h3>
+        <p>Equipping consumables applies modifiers on top of the base stats before the damage is computed:</p>
+        <p class="eq">effective_pen = penetration × pen_mult + pen_add</p>
+        <p class="eq">damage_per_shot = max(0, effective_pen − armor) × dmg_mult</p>
+        <p class="eq">effective_reload = reload × reload_mult</p>
+        <p>Modifiers stack when multiple consumables are active, and the table's PEN / Reload columns plus the PvP graph all update to reflect the effective values. Sourced from the World of Sea Battle Wiki:</p>
+        <ul>
+          <li><strong>Black Double Powder</strong>: +2.5 penetration, reload +9%.</li>
+          <li><strong>Phosphorous</strong>: +2 penetration (does not stack with gunpowder in‑game).</li>
+          <li><strong>Powder Charge</strong>: penetration halved, but adds explosion area damage (not modeled).</li>
+          <li><strong>Rum Ration</strong>: crew loads guns 20% faster (reload ÷ 1.2).</li>
+          <li><strong>Red / Yellow Signal Flare</strong>: +7% weapon damage to the squadron.</li>
+          <li><strong>Red Double Powder</strong>: +25% gun damage vs structures.</li>
+        </ul>
+
+        <h3>6) Modes and what they show</h3>
         <ul>
           <li><strong>Numeric armor (2–15)</strong>: computes the exact minute‑damage at the chosen armor. Winner/runner‑up are crowned for this single armor value.</li>
           <li><strong>Small Ships</strong> (armor 2–5): aggregates performance across four armor values (2,3,4,5). It shows a sparkline, total wins, and the average minute‑damage (deciding column).</li>
@@ -201,13 +234,13 @@
           <li><strong>All‑Around</strong> (armor 2–15): like Small Ships, but averaged across 2…15. The table is sorted by that average.</li>
         </ul>
 
-        <h3>6) Tie handling & decimals</h3>
+        <h3>7) Tie handling & decimals</h3>
         <ul>
           <li><strong>Wins</strong> counts ties as full wins for all tied cannons (can switch to half‑wins on request).</li>
           <li>All calcs keep full precision; the table displays 2 decimals (or 4 for Shots/60s).</li>
         </ul>
 
-        <h3>7) Assumptions & limits</h3>
+        <h3>8) Assumptions & limits</h3>
         <ul>
           <li>No misses, crits, overheating, or ammo limits; reloads are constant.</li>
           <li>Damage is linear with penetration minus armor; negatives clamp to zero.</li>
@@ -221,35 +254,52 @@
 
   <script>
     // === Data ================================================================
+    // Cannon stats sourced from the World of Sea Battle Wiki (Infobox Cannon).
+    // category: Cannon | Long Cannon | Carronade ; tier: Basic | Advanced | Pirate
     const DATA = {
       Light: [
-        { name: '6-pdr rusty', penetration: 13, reload: 10.5, boarding: 11 },
-        { name: '6-pdr culverin', penetration: 14, reload: 15.5, boarding: 12 },
-        { name: '12-pdr carronade', penetration: 20, reload: 22, boarding: 18 },
-        { name: '8-pdr cannon', penetration: 14, reload: 9, boarding: 12 },
-        { name: '8-pdr culverin', penetration: 15, reload: 13, boarding: 13 },
-        { name: '16-pdr carronade', penetration: 21.5, reload: 19.5, boarding: 19 },
+        { name: '6-pdr rusty', penetration: 13, reload: 10.5, boarding: 11, category: 'Cannon', tier: 'Basic', range: 125, angle: 34, accuracy: 8.5 },
+        { name: '6-pdr culverin', penetration: 14, reload: 15.5, boarding: 12, category: 'Long Cannon', tier: 'Basic', range: 135, angle: 17, accuracy: 5 },
+        { name: '12-pdr carronade', penetration: 20, reload: 22, boarding: 18, category: 'Carronade', tier: 'Basic', range: 105, angle: 26, accuracy: 9.5 },
+        { name: '8-pdr cannon', penetration: 14, reload: 9, boarding: 12, category: 'Cannon', tier: 'Advanced', range: 130, angle: 31, accuracy: 9.5 },
+        { name: '8-pdr culverin', penetration: 15, reload: 13, boarding: 13, category: 'Long Cannon', tier: 'Advanced', range: 140, angle: 16, accuracy: 6 },
+        { name: '16-pdr carronade', penetration: 21.5, reload: 19.5, boarding: 19, category: 'Carronade', tier: 'Advanced', range: 110, angle: 23, accuracy: 11.5 },
       ],
       Medium: [
-        { name: '16-pdr cannon', penetration: 14, reload: 12, boarding: 12 },
-        { name: '16-pdr culverin', penetration: 15, reload: 17.5, boarding: 13 },
-        { name: '24-pdr carronade', penetration: 21.5, reload: 25.5, boarding: 19 },
-        { name: '18-pdr cannon', penetration: 15, reload: 10.5, boarding: 13 },
-        { name: '18-pdr long cannon', penetration: 16, reload: 15, boarding: 14 },
-        { name: '28-pdr carronade', penetration: 23, reload: 22.5, boarding: 21 },
-        { name: '20-pdr admiral', penetration: 17, reload: 13.5, boarding: 15 },
-        { name: '22-pdr Scorcher', penetration: 19, reload: 26, boarding: 17 },
-        { name: '32-pdr Stormbringer', penetration: 25.5, reload: 27.5, boarding: 23 },
+        { name: '16-pdr cannon', penetration: 14, reload: 12, boarding: 12, category: 'Cannon', tier: 'Basic', range: 130, angle: 29, accuracy: 10.5 },
+        { name: '16-pdr culverin', penetration: 15, reload: 17.5, boarding: 13, category: 'Long Cannon', tier: 'Basic', range: 140, angle: 14, accuracy: 6.5 },
+        { name: '24-pdr carronade', penetration: 21.5, reload: 25.5, boarding: 19, category: 'Carronade', tier: 'Basic', range: 110, angle: 21, accuracy: 12 },
+        { name: '18-pdr cannon', penetration: 15, reload: 10.5, boarding: 13, category: 'Cannon', tier: 'Advanced', range: 135, angle: 26, accuracy: 12 },
+        { name: '18-pdr long cannon', penetration: 16, reload: 15, boarding: 14, category: 'Long Cannon', tier: 'Advanced', range: 145, angle: 13, accuracy: 8 },
+        { name: '28-pdr carronade', penetration: 23, reload: 22.5, boarding: 21, category: 'Carronade', tier: 'Advanced', range: 115, angle: 20, accuracy: 14.5 },
+        { name: '20-pdr admiral', penetration: 17, reload: 13.5, boarding: 15, category: 'Cannon', tier: 'Pirate', range: 130, angle: 21, accuracy: 11 },
+        { name: '22-pdr Scorcher', penetration: 19, reload: 26, boarding: 17, category: 'Long Cannon', tier: 'Pirate', range: 148, angle: 9, accuracy: 9.5 },
+        { name: '32-pdr Stormbringer', penetration: 25.5, reload: 27.5, boarding: 23, category: 'Carronade', tier: 'Pirate', range: 105, angle: 16, accuracy: 13 },
       ],
       Heavy: [
-        { name: '32-pdr cannon', penetration: 17.5, reload: 12, boarding: 0 },
-        { name: '32-pdr long cannon', penetration: 18.5, reload: 17.5, boarding: 0 },
-        { name: '42-pdr carronade', penetration: 27, reload: 26, boarding: 0 },
-        { name: '36-pdr inrog', penetration: 20, reload: 16, boarding: 0 },
-        { name: '38-pdr jericho', penetration: 22, reload: 30.5, boarding: 0 },
-        { name: '48-pdr colossus', penetration: 30, reload: 32, boarding: 0 },
+        { name: '32-pdr cannon', penetration: 17.5, reload: 12, boarding: 0, category: 'Cannon', tier: 'Advanced', range: 140, angle: 20, accuracy: 15 },
+        { name: '32-pdr long cannon', penetration: 18.5, reload: 17.5, boarding: 0, category: 'Long Cannon', tier: 'Advanced', range: 150, angle: 10, accuracy: 10 },
+        { name: '42-pdr carronade', penetration: 27, reload: 26, boarding: 0, category: 'Carronade', tier: 'Advanced', range: 120, angle: 15, accuracy: 18 },
+        { name: '36-pdr inrog', penetration: 20, reload: 16, boarding: 0, category: 'Cannon', tier: 'Pirate', range: 135, angle: 16, accuracy: 13.5 },
+        { name: '38-pdr jericho', penetration: 22, reload: 30.5, boarding: 0, category: 'Long Cannon', tier: 'Pirate', range: 153, angle: 7, accuracy: 12 },
+        { name: '48-pdr colossus', penetration: 30, reload: 32, boarding: 0, category: 'Carronade', tier: 'Pirate', range: 110, angle: 12, accuracy: 16 },
       ]
     };
+
+    // Combat consumables sourced from the World of Sea Battle Wiki.
+    // Each toggled consumable applies a modifier to the cannon DPS math:
+    //   effectivePen = penetration * penMult + penAdd
+    //   damagePerShot = max(0, effectivePen - armor) * dmgMult
+    //   effectiveReload = reload * reloadMult
+    const CONSUMABLES = [
+      { id: 'black_powder',  name: 'Black Double Powder', penAdd: 2.5, reloadMult: 1.09, desc: '+2.5 penetration, reload +9%' },
+      { id: 'phosphorous',   name: 'Phosphorous',         penAdd: 2,                     desc: '+2 penetration (does not stack with gunpowder)' },
+      { id: 'powder_charge', name: 'Powder Charge',       penMult: 0.5,                  desc: 'Penetration halved, adds explosion area damage' },
+      { id: 'rum_ration',    name: 'Rum Ration',          reloadMult: 1 / 1.2,           desc: 'Load guns 20% faster' },
+      { id: 'red_flare',     name: 'Red Signal Flare',    dmgMult: 1.07,                 desc: '+7% weapon damage (squadron)' },
+      { id: 'yellow_flare',  name: 'Yellow Signal Flare', dmgMult: 1.07,                 desc: '+7% damage, +1 knot (squadron)' },
+      { id: 'red_powder',    name: 'Red Double Powder',   dmgMult: 1.25,                 desc: '+25% gun damage vs structures' },
+    ];
 
     const SHIPS = {
       'Black Wind': { cannons: 16, sizes: ['Light'], class: 'Combat' },
@@ -267,13 +317,73 @@
     // === State ===============================================================
     let state = { ship: '', size: 'Light', armor: 'small' }; // default Small Ships
     let pvpState = { ship: '', size: 'Light', armor: 5 }; // PvP section state (default armor 5 for medium ships)
+    const activeConsumables = new Set(); // ids of currently equipped consumables (shared loadout)
+
+    // === Consumable modifiers ===============================================
+    // Aggregate the active consumables into a single set of multipliers/offsets.
+    function consumableMods(){
+      let penAdd = 0, penMult = 1, dmgMult = 1, reloadMult = 1;
+      for(const c of CONSUMABLES){
+        if(!activeConsumables.has(c.id)) continue;
+        penAdd    += c.penAdd    || 0;
+        penMult   *= (c.penMult    != null ? c.penMult    : 1);
+        dmgMult   *= (c.dmgMult    != null ? c.dmgMult    : 1);
+        reloadMult *= (c.reloadMult != null ? c.reloadMult : 1);
+      }
+      return { penAdd, penMult, dmgMult, reloadMult };
+    }
 
     // === Utils ===============================================================
     const clamp0 = x => Math.max(0, x);
-    const shotsPer60 = reload => 60 / reload; // fractional allowed
-    const damagePerShot = (pen, armor) => clamp0(pen - armor);
+    const effectivePen = pen => { const m = consumableMods(); return pen * m.penMult + m.penAdd; };
+    const effectiveReload = reload => reload * consumableMods().reloadMult;
+    const shotsPer60 = reload => 60 / effectiveReload(reload); // fractional allowed
+    const damagePerShot = (pen, armor) => clamp0(effectivePen(pen) - armor) * consumableMods().dmgMult;
     const damagePer60 = (pen, armor, reload) => damagePerShot(pen, armor) * shotsPer60(reload);
     const fmt = (n, d=2) => Number.isFinite(n) ? n.toFixed(d) : '-';
+
+    // Category badge + tier/range/accuracy tooltip for a cannon row.
+    function categoryBadge(it){
+      if(!it.category) return '';
+      const cls = it.category === 'Cannon' ? 'cat-cannon' : it.category === 'Long Cannon' ? 'cat-long' : 'cat-carronade';
+      const label = it.category === 'Long Cannon' ? 'Long' : it.category;
+      const tip = `${it.category} • ${it.tier || ''} • range ${it.range ?? '?'} • angle ${it.angle ?? '?'}° • accuracy ${it.accuracy ?? '?'}`;
+      const tier = it.tier ? `<span class="tier-tag">${it.tier}</span>` : '';
+      return `<span class="cat-badge ${cls}" title="${tip}">${label}</span>${tier}`;
+    }
+
+    // === Build Consumable Buttons ==========================================
+    const consumableGroup = document.getElementById('consumableGroup');
+    function buildConsumableButtons(){
+      consumableGroup.querySelectorAll('button.btn').forEach(b=>b.remove());
+      CONSUMABLES.forEach(c=>{
+        const b=document.createElement('button');
+        const isActive=activeConsumables.has(c.id);
+        b.className='btn consumable-btn'+(isActive?' active':'');
+        b.setAttribute('aria-pressed',isActive?'true':'false');
+        b.textContent=c.name;
+        b.title=c.desc;
+        b.dataset.consumable=c.id;
+        consumableGroup.appendChild(b);
+      });
+    }
+
+    function updateConsumableNote(){
+      const note=document.getElementById('consumableNote');
+      if(!note) return;
+      if(activeConsumables.size===0){
+        note.textContent='No consumables equipped — base cannon stats.';
+        return;
+      }
+      const m=consumableMods();
+      const parts=[];
+      if(m.penMult!==1) parts.push(`penetration ×${fmt(m.penMult,2)}`);
+      if(m.penAdd!==0) parts.push(`penetration ${m.penAdd>=0?'+':''}${fmt(m.penAdd,1)}`);
+      if(m.dmgMult!==1) parts.push(`damage ×${fmt(m.dmgMult,3)}`);
+      if(m.reloadMult!==1) parts.push(`reload ×${fmt(m.reloadMult,3)}`);
+      const names=CONSUMABLES.filter(c=>activeConsumables.has(c.id)).map(c=>c.name).join(', ');
+      note.textContent=`Equipped: ${names}. Net effect: ${parts.length?parts.join(', '):'no DPS change'}.`;
+    }
 
     // === Build Armor Buttons ================================================
     const armorGroup = document.getElementById('armorGroup');
@@ -576,6 +686,22 @@
       renderPvpGraph();
     });
 
+    // Consumables loadout (multi-select) — affects both the table and PvP graph.
+    consumableGroup.addEventListener('click',e=>{
+      const btn=e.target.closest('.btn');
+      if(!btn||!consumableGroup.contains(btn))return;
+      const id=btn.dataset.consumable;
+      if(id==null)return;
+      if(activeConsumables.has(id)) activeConsumables.delete(id);
+      else activeConsumables.add(id);
+      const on=activeConsumables.has(id);
+      btn.classList.toggle('active',on);
+      btn.setAttribute('aria-pressed',on?'true':'false');
+      updateConsumableNote();
+      renderTable();
+      renderPvpGraph();
+    });
+
     // === Render Damage Graph ================================================
     // === Render ==============================================================
     function renderTable(){
@@ -634,8 +760,8 @@
           const avg=arr.reduce((s,x)=>s+x,0)/arr.length;
           let wins=0; for(let i=0;i<arr.length;i++){ if(Math.abs(arr[i]-bestPerArmor[i])<1e-9) wins++; }
           const boardingTotal=it.boarding*shipMultiplier;
-          const boardingDps60=(it.boarding/it.reload)*60*shipMultiplier;
-          return {name:it.name, pen:it.penetration, reload:it.reload, boarding:boardingTotal, boardingDps60, avg, wins, arr};
+          const boardingDps60=(it.boarding/effectiveReload(it.reload))*60*shipMultiplier;
+          return {name:it.name, badge:categoryBadge(it), pen:effectivePen(it.penetration), reload:effectiveReload(it.reload), boarding:boardingTotal, boardingDps60, avg, wins, arr};
         }).sort((a,b)=>b.avg-a.avg);
 
         const spark=(vals)=>{
@@ -652,7 +778,7 @@
           const tr=document.createElement('tr');
           if(i===0) tr.classList.add('winner');
           if(i===1) tr.classList.add('runnerup');
-          const nameCell=`${r.name}${i===0? ' <span class="winner-badge" title="Best all-around across armor '+armorStart+'–'+armorEnd+'"><span class="emoji">🌊</span> Best Winner</span>' : i===1? ' <span class="runner-badge" title="Second best all-around"><span class="emoji silver-cup">🏆</span> Second Best Winner</span>' : ''}`;
+          const nameCell=`${r.name}${r.badge}${i===0? ' <span class="winner-badge" title="Best all-around across armor '+armorStart+'–'+armorEnd+'"><span class="emoji">🌊</span> Best Winner</span>' : i===1? ' <span class="runner-badge" title="Second best all-around"><span class="emoji silver-cup">🏆</span> Second Best Winner</span>' : ''}`;
           const boardingDisplay=r.boarding===0?'TBD':fmt(r.boarding,0);
           const boardingDpsDisplay=r.boarding===0?'TBD':fmt(r.boardingDps60,2);
           tr.innerHTML=`
@@ -684,8 +810,8 @@
         const dpshot=damagePerShot(it.penetration,state.armor);
         const d60=dpshot*s60*shipMultiplier;
         const boardingTotal=it.boarding*shipMultiplier;
-        const boardingDps60=(it.boarding/it.reload)*60*shipMultiplier;
-        return {name:it.name, pen:it.penetration, reload:it.reload, boarding:boardingTotal, boardingDps60, s60, dpshot, d60};
+        const boardingDps60=(it.boarding/effectiveReload(it.reload))*60*shipMultiplier;
+        return {name:it.name, badge:categoryBadge(it), pen:effectivePen(it.penetration), reload:effectiveReload(it.reload), boarding:boardingTotal, boardingDps60, s60, dpshot, d60};
       }).sort((a,b)=>b.d60-a.d60);
 
       const maxD=rows.length?rows[0].d60:1;
@@ -695,7 +821,7 @@
         const tr=document.createElement('tr');
         if(i===0) tr.classList.add('winner');
         if(i===1) tr.classList.add('runnerup');
-        const nameCell=`${r.name}${i===0? ' <span class="winner-badge" title="Top damage in 60s"><span class="emoji">🏆</span> Best Winner</span>' : i===1? ' <span class="runner-badge" title="Second best in 60s"><span class="emoji silver-cup">🏆</span> Second Best Winner</span>' : ''}`;
+        const nameCell=`${r.name}${r.badge}${i===0? ' <span class="winner-badge" title="Top damage in 60s"><span class="emoji">🏆</span> Best Winner</span>' : i===1? ' <span class="runner-badge" title="Second best in 60s"><span class="emoji silver-cup">🏆</span> Second Best Winner</span>' : ''}`;
         const boardingDisplay=r.boarding===0?'TBD':fmt(r.boarding,0);
         const boardingDpsDisplay=r.boarding===0?'TBD':fmt(r.boardingDps60,2);
         tr.innerHTML=`
@@ -761,6 +887,7 @@
       const timePoints = Array.from({length: 601}, (_, i) => i / 10); // 0 to 60 seconds, 0.1s increments
       const cannonData = cannons.map(cannon => {
         const dpshot = damagePerShot(cannon.penetration, armor);
+        const reload = effectiveReload(cannon.reload);
         const cumulativeDamage = timePoints.map(time => {
           // Calculate how many shots have fired by this time
           // First shot fires at time 0, then subsequent shots at reload intervals
@@ -768,7 +895,7 @@
           // At time 0: Math.floor(0/reload) + 1 = 0 + 1 = 1 shot
           // At time 9: Math.floor(9/9) + 1 = 1 + 1 = 2 shots
           // At time 18: Math.floor(18/9) + 1 = 2 + 1 = 3 shots
-          const shotsFired = Math.floor(time / cannon.reload) + 1;
+          const shotsFired = Math.floor(time / reload) + 1;
           
           // Calculate damage from shots fired
           let totalDamage = shotsFired * dpshot;
@@ -1021,6 +1148,8 @@
     // Init
     buildArmorButtons();
     buildShipButtons();
+    buildConsumableButtons();
+    updateConsumableNote();
     buildPvpShipButtons();
     buildPvpArmorButtons();
     renderTable();
